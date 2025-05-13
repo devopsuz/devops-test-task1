@@ -1,0 +1,27 @@
+# Image tag for the deployment, this should be dynamically passed by CI/CD pipeline
+image:
+  tag: master  
+
+# The number of replicas for high availability
+replicaCount: 2  # Increased replicas to ensure high availability
+
+# Ingress configuration for HTTP(s) access
+ingress:
+  enabled: true
+  host: "{{ .Release.Name }}.my-app.test"  # Dynamic host based on the release name
+  tls: false  # Set to true if TLS is enabled, helps with HTTPS configuration
+  tlsSecretName: ""  # Define your TLS secret here if needed
+
+# Resources for the container (CPU, memory limits, and requests)
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+# Persistent Volume configuration
+persistentVolume:
+  size: 1Gi  # PVC size
+  storageClassName: standard  # Specifies the StorageClass for PV

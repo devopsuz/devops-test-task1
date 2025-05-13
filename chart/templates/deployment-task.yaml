@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}  # Dynamic number of replicas based on values.yaml
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1  # Controls the number of extra pods during an update
+      maxUnavailable: 0  # Ensures no downtime during updates (zero downtime)
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: my-app
+          image: ghcr.io/ipakyulibank/devops-test-task1/test-app:{{ .Values.image.tag }}
+          imagePullPolicy: Always
+          env:
+            - name: PORT
+              value: "80"
+            - name: IMAGE_PATH
+              value: /data/image
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+          readinessProbe:
+            httpGet:
+              path: /health  # Health check path to ensure pod is healthy
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health  # Health check path for liveness probe
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}
